@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Reading Shelf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#13161d;--surface:#1c212b;--line:#2b3140;--text:#ebe6da;--muted:#9097a8;--star:#d8b46a;--link:#8cc2b4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 'Instrument Sans',system-ui,sans-serif}
+a{color:inherit;text-decoration:none}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--link);outline-offset:3px}
+h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;line-height:1.15;margin:0}
+header,main,footer{max-width:1080px;margin:0 auto;padding:0 20px}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:22px;padding-bottom:22px}
+.brand{font:600 24px Newsreader,Georgia,serif}nav a{margin-left:20px;color:var(--muted)}nav a.on,nav a:hover{color:var(--text)}
+h2{font-size:28px;margin:48px 0 18px}
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:22px;margin-top:8px}
+.hero .c img,.hero .c .ph{width:100%;aspect-ratio:2/3;border-radius:6px;box-shadow:0 14px 34px #0009}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:20px}
+.c img,.ph{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;background:var(--surface)}
+.ph{display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;font:600 14px Newsreader,serif;color:var(--muted);border:1px solid var(--line)}
+.c{display:block}.c:hover img,.c:hover .ph{filter:brightness(1.12)}
+.t{font-size:14px;margin-top:8px;line-height:1.3}.a{font-size:13px;color:var(--muted)}.s{color:var(--star);font-size:13px}
+.lead{color:var(--muted);max-width:56ch;margin:10px 0 0}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.bar button,.bar input,.bar select{background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font:inherit}
+.bar button.on{border-color:var(--link);color:var(--link)}
+.book{display:grid;grid-template-columns:minmax(150px,260px) 1fr;gap:32px;margin-top:16px}
+@media(max-width:640px){.book{grid-template-columns:1fr}.book .cv{max-width:220px}}
+.book img,.book .ph{border-radius:6px;box-shadow:0 14px 34px #0009}
+.rev{white-space:pre-wrap;max-width:62ch;font-family:Newsreader,Georgia,serif;font-size:19px;line-height:1.6}
+.buy a{display:inline-block;margin:6px 10px 0 0;padding:8px 14px;border:1px solid var(--link);color:var(--link);border-radius:6px}
+footer{color:var(--muted);font-size:14px;padding-top:60px;padding-bottom:40px}.back{color:var(--muted)}
+</style></head><body>
+<header><a class="brand" href="#/" id="site"></a><nav id="nav"></nav></header>
+<main id="app"></main><footer id="foot"></footer>
+<script>
+// ---- Settings: edit these ----
+const SITE_NAME="The Reading Shelf";
+const AMAZON_TAG="";      // e.g. "yourname-20" once your Associates account is active
+const BOOKSHOP_ID="";     // your Bookshop.org affiliate ID, if you sign up
+// ------------------------------
+let B=[];const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const stars=r=>r?`<span class="s">★ ${r}</span>`:'';
+function cover(b){const ph=`<div class="ph">${esc(b.title)}</div>`;if(!b.isbn)return ph;
+ return `<img loading="lazy" alt="Cover of ${esc(b.title)}" src="https://covers.openlibrary.org/b/isbn/${b.isbn}-L.jpg?default=false" onerror="this.outerHTML=this.dataset.ph" data-ph="${esc(ph)}">`}
+const card=b=>`<a class="c" href="#/book/${b.id}">${cover(b)}<div class="t">${esc(b.title)}</div><div class="a">${esc(b.author)}</div>${stars(b.rating)}</a>`;
+const by=s=>B.filter(b=>b.shelf===s);
+function home(){const cr=by('currently-reading'),rd=by('read').slice(0,12),tr=by('to-read').slice(0,8);
+ return `<h1 style="font-size:44px;margin-top:20px">${esc(SITE_NAME)}</h1><p class="lead">What I'm reading, what I thought, and what's next.</p>
+ ${cr.length?`<h2>Reading now</h2><div class="hero">${cr.map(card).join('')}</div>`:''}
+ <h2>Recently finished</h2><div class="grid">${rd.map(card).join('')}</div>
+ <h2>Up next</h2><div class="grid">${tr.map(card).join('')}</div>`}
+let tab='read',q='',minr=0;
+function library(){return `<h2 style="margin-top:20px">Library</h2><div class="bar">
+ <button data-t="read" class="${tab=='read'?'on':''}">Read</button><button data-t="to-read" class="${tab=='to-read'?'on':''}">To read</button>
+ <input id="q" type="search" placeholder="Search title or author" value="${esc(q)}" aria-label="Search">
+ <select id="mr" aria-label="Minimum rating"><option value="0">Any rating</option>${[3,4,4.5].map(n=>`<option value="${n}" ${minr==n?'selected':''}>${n}+ stars</option>`).join('')}</select></div>
+ <div class="grid" id="lg"></div>`}
+function fill(){const k=q.toLowerCase();$('#lg').innerHTML=by(tab).filter(b=>(b.title+b.author).toLowerCase().includes(k)&&b.rating>=minr).map(card).join('')||'<p class="a">No books match.</p>'}
+function links(b){const l=[];if(AMAZON_TAG&&b.isbn)l.push(`<a rel="sponsored noopener" href="https://www.amazon.com/s?k=${b.isbn}&tag=${AMAZON_TAG}">Amazon</a>`);
+ if(BOOKSHOP_ID&&b.isbn)l.push(`<a rel="sponsored noopener" href="https://bookshop.org/a/${BOOKSHOP_ID}/${b.isbn}">Bookshop.org</a>`);
+ return l.length?`<div class="buy">${l.join('')}</div>`:''}
+function book(id){const b=B.find(x=>x.id==id);if(!b)return'<p>Book not found. <a href="#/library">Back to library</a></p>';
+ const meta=[b.author,b.year,b.pages&&b.pages+' pages'].filter(Boolean).join(' · ');
+ return `<a class="back" href="#/library">← Library</a><div class="book"><div class="cv">${cover(b)}</div><div>
+ <h1 style="font-size:38px">${esc(b.title)}</h1><p class="a">${esc(meta)}</p>
+ ${b.shelf=='read'?`<p>${stars(b.rating)} <span class="a">Finished ${esc(b.date)}</span></p>`:`<p class="a">${b.shelf=='to-read'?'On my to-read list':'Reading now'}</p>`}
+ ${b.review?`<p class="rev">${esc(b.review)}</p>`:(b.shelf=='read'?'<p class="a">No written review yet.</p>':'')}${links(b)}</div></div>`}
+function picks(){const p=by('read').filter(b=>b.rating>=4).sort((a,b)=>b.rating-a.rating);
+ return `<h2 style="margin-top:20px">Recommended</h2><p class="lead">My highest-rated recent reads.</p><div class="grid" style="margin-top:24px">${p.map(card).join('')}</div>`}
+function route(){const h=location.hash.replace('#/','').split('/');const app=$('#app');
+ app.innerHTML=h[0]=='library'?library():h[0]=='book'?book(h[1]):h[0]=='picks'?picks():home();
+ if(h[0]=='library')fill();window.scrollTo(0,0);
+ document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')=='#/'+(h[0]||'')))}
+document.addEventListener('click',e=>{const t=e.target.dataset.t;if(t){tab=t;route()}});
+document.addEventListener('input',e=>{if(e.target.id=='q'){q=e.target.value;fill()}if(e.target.id=='mr'){minr=+e.target.value;fill()}});
+fetch('books.json').then(r=>r.json()).then(d=>{B=d;
+ document.title=SITE_NAME;$('#site').textContent=SITE_NAME;
+ $('#nav').innerHTML='<a href="#/">Home</a><a href="#/library">Library</a><a href="#/picks">Recommended</a>';
+ $('#foot').innerHTML=(AMAZON_TAG||BOOKSHOP_ID?'<p>As an Amazon Associate I earn from qualifying purchases. Some links on this site are affiliate links.</p>':'')+'<p>Covers from Open Library.</p>';
+ route()}).catch(()=>{$('#app').innerHTML='<p>Could not load books.json. Make sure it sits next to index.html.</p>'});
+addEventListener('hashchange',route);
+</script></body></html>
